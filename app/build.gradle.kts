@@ -6,6 +6,15 @@ android {
     namespace = "com.operit.maxbright"
     compileSdk = 35
 
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("maxbright.keystore")
+            storePassword = "maxbright123"
+            keyAlias = "maxbright"
+            keyPassword = "maxbright123"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.operit.maxbright"
         minSdk = 24
@@ -17,6 +26,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
