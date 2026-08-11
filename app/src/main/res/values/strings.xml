@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">硬件最大亮度</string>
+    <string name="tile_main_label">主屏最大亮度</string>
+    <string name="tile_sub_label">副屏最大亮度</string>
+</resources>
