@@ -134,9 +134,17 @@ public class BrightnessKeepService extends Service {
         }
 
         // 面板点亮：守卫设置不被复位
-        // a) 亮度模式必须是手动，否则系统会按光线传感器覆写
-        fixes.append("m=$(settings get system ").append(p.modeSetting).append("); ")
-             .append("[ \"$m\" != \"0\" ] && settings put system ").append(p.modeSetting).append(" 0; ");
+        // a) 亮度模式必须是手动，否则系统会按光线传感器覆写。
+        //    OS4.0 之后副屏模式键写入了 secure 表且系统读 secure，因此副屏同时守卫两个表。
+        if ("sub".equals(key)) {
+            fixes.append("m=$(settings get secure ").append(p.modeSetting).append(" 2>/dev/null); ")
+                 .append("[ -z \"$m\" ] && m=$(settings get system ").append(p.modeSetting).append("); ")
+                 .append("[ \"$m\" != \"0\" ] && settings put secure ").append(p.modeSetting).append(" 0; ")
+                 .append("[ \"$m\" != \"0\" ] && settings put system ").append(p.modeSetting).append(" 0; ");
+        } else {
+            fixes.append("m=$(settings get system ").append(p.modeSetting).append("); ")
+                 .append("[ \"$m\" != \"0\" ] && settings put system ").append(p.modeSetting).append(" 0; ");
+        }
         // b) 背屏超时必须保持∞，防止休眠事件链复位亮度
         if ("sub".equals(key)) {
             fixes.append("t=$(settings get system ").append(SUBSCREEN_TIMEOUT_KEY).append("); ")
