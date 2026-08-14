@@ -38,6 +38,41 @@ public final class BrightnessConfig {
         }
     }
 
+    /** 读取任意 settings secure 整型设置，失败返回 def。 */
+    public static int getSecureSetting(String key, int def) {
+        PrivilegedShell.Result r = PrivilegedShell.run("settings get secure " + key);
+        try {
+            return Integer.parseInt(r.stdout.trim());
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    /**
+     * 读取面板亮度模式（0=手动，1=自动）。
+     * 注意：OS4.0 之后小米把副屏亮度模式键 sub_display_screen_brightness_mode
+     * 同时写入了 system 和 secure 两个表，且系统实际读取 secure 表。
+     * 因此副屏读取时优先 secure，主屏仍读 system。
+     */
+    public static int getPanelMode(PanelSpec panel) {
+        if ("sub".equals(panel.key)) {
+            int m = getSecureSetting(panel.modeSetting, -1);
+            if (m >= 0) return m;
+        }
+        return getSetting(panel.modeSetting, 1);
+    }
+
+    /**
+     * 设置面板亮度模式（0=手动，1=自动）。
+     * 副屏同时写 system 和 secure 两个表，兼容新旧系统版本。
+     */
+    public static void setPanelMode(PanelSpec panel, int mode) {
+        PrivilegedShell.run("settings put system " + panel.modeSetting + " " + mode);
+        if ("sub".equals(panel.key)) {
+            PrivilegedShell.run("settings put secure " + panel.modeSetting + " " + mode);
+        }
+    }
+
     /** 读取面板背光电源状态 bl_power：0=点亮，非0=熄灭/休眠。失败返回 -1。 */
     public static int readBlPower(String node) {
         String dir = node.substring(0, node.lastIndexOf('/'));
