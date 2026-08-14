@@ -57,14 +57,14 @@ public final class BrightnessController {
 
             // 1. 记录现场（亮度值、亮度模式、背屏超时），用于关闭时恢复
             int brightness = BrightnessConfig.getSetting(panel.brightnessSetting, 0);
-            int mode = BrightnessConfig.getSetting(panel.modeSetting, 1);
+            int mode = BrightnessConfig.getPanelMode(panel);
             int timeout = sub
                     ? BrightnessConfig.getSetting(SUBSCREEN_TIMEOUT_KEY, 10000)
                     : -1;
             BrightnessConfig.saveSnapshot(app, panel.key, brightness, mode, timeout);
 
             // 2. 关闭自动亮度（切手动模式），否则系统会持续覆写硬件节点
-            PrivilegedShell.run("settings put system " + panel.modeSetting + " 0");
+            BrightnessConfig.setPanelMode(panel, 0);
             // 手动亮度档拉到最大，避免系统应用旧的手动映射值
             PrivilegedShell.run("settings put system " + panel.brightnessSetting + " 255");
 
@@ -144,7 +144,7 @@ public final class BrightnessController {
             }
 
             // 关闭磁贴时重新开启系统自动亮度
-            PrivilegedShell.run("settings put system " + panel.modeSetting + " 1");
+            BrightnessConfig.setPanelMode(panel, 1);
 
             // 让守护服务重新评估（无激活面板时会自动停止）
             startKeepService(app);
@@ -157,7 +157,7 @@ public final class BrightnessController {
     private static void rollback(Context app, PanelSpec panel,
                                  int brightness, int mode, int timeout, boolean sub) {
         PrivilegedShell.run("settings put system " + panel.brightnessSetting + " " + brightness);
-        PrivilegedShell.run("settings put system " + panel.modeSetting + " " + mode);
+        BrightnessConfig.setPanelMode(panel, mode);
         if (sub && timeout > 0) {
             PrivilegedShell.run("settings put system " + SUBSCREEN_TIMEOUT_KEY + " " + timeout);
         }
